@@ -1,0 +1,3 @@
+﻿  1_6.c
+E:\Laba_C\1_6\1_6\1_6.c(13,8): warning C4244: функция: преобразование "time_t" в "unsigned int", возможна потеря данных
+  1_6.vcxproj -> E:\Laba_C\1_6\x64\Debug\1_6.exe
