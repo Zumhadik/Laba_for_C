@@ -1,0 +1,21 @@
+﻿  2_2.c
+E:\Laba_C\2 laba\2_2\2_2\2_2.c(33,3): warning C4047: return: "size_t *" отличается по уровням косвенного обращения от "int"
+E:\Laba_C\2 laba\2_2\2_2\2_2.c(40,3): warning C4047: return: "size_t *" отличается по уровням косвенного обращения от "int"
+E:\Laba_C\2 laba\2_2\2_2\2_2.c(50,3): warning C4047: return: "char *" отличается по уровням косвенного обращения от "int"
+E:\Laba_C\2 laba\2_2\2_2\2_2.c(57,3): warning C4047: return: "char *" отличается по уровням косвенного обращения от "int"
+E:\Laba_C\2 laba\2_2\2_2\2_2.c(74,3): warning C4047: return: "char *" отличается по уровням косвенного обращения от "int"
+E:\Laba_C\2 laba\2_2\2_2\2_2.c(82,3): warning C4047: return: "char *" отличается по уровням косвенного обращения от "int"
+E:\Laba_C\2 laba\2_2\2_2\2_2.c(105,3): warning C4047: return: "char *" отличается по уровням косвенного обращения от "int"
+E:\Laba_C\2 laba\2_2\2_2\2_2.c(112,3): warning C4047: return: "char *" отличается по уровням косвенного обращения от "int"
+E:\Laba_C\2 laba\2_2\2_2\2_2.c(152,3): warning C4047: return: "char *" отличается по уровням косвенного обращения от "int"
+E:\Laba_C\2 laba\2_2\2_2\2_2.c(171,3): warning C4047: return: "char *" отличается по уровням косвенного обращения от "int"
+E:\Laba_C\2 laba\2_2\2_2\2_2.c(177,3): warning C4047: return: "char *" отличается по уровням косвенного обращения от "int"
+E:\Laba_C\2 laba\2_2\2_2\2_2.c(206,3): warning C4047: return: "char *" отличается по уровням косвенного обращения от "int"
+E:\Laba_C\2 laba\2_2\2_2\2_2.c(156,6): warning C4047: инициализация: "int" отличается по уровням косвенного обращения от "char *"
+E:\Laba_C\2 laba\2_2\2_2\2_2.c(274,15): warning C4047: ==: "char *" отличается по уровням косвенного обращения от "int"
+E:\Laba_C\2 laba\2_2\2_2\2_2.c(278,20): warning C4047: ==: "char *" отличается по уровням косвенного обращения от "int"
+  Создание кода
+  Previous IPDB not found, fall back to full compilation.
+  All 11 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Создание кода завершено
+  2_2.vcxproj -> E:\Laba_C\2 laba\2_2\x64\Release\2_2.exe
