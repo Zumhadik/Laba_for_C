@@ -99,11 +99,17 @@ namespace Offsets
 
     // ★ NEW: RBX::Lua::WeakThreadRef — wrapper объект для lua_State
     // Scan heap на qword == этот vtable → все thread wrapper'ы в процессе.
-    // Через WeakThreadRef->lock() или dereference получается live lua_State*.
+    // Из WeakThreadRef_lock извлечён layout:
+    //   +0x00: vtable_ptr
+    //   +0x10: wrapped target (lua_State* или RBX::Lua::Thread wrapper)
+    //   +0x18: shared_ptr control block (use_count на +0x08)
     namespace WeakThreadRef {
         const uintptr_t RTTI_TypeDescriptor              = REBASE(0x8271520);  // ".?AVWeakThreadRef@Lua@RBX@@"
         const uintptr_t RTTI_COL_Primary                 = REBASE(0x7591218);  // offset=0, primary
         const uintptr_t VTable                           = REBASE(0x6E8B508);  // ⭐ scan ключ
+        const uintptr_t Lock                             = REBASE(0xCF08A0);   // ★ shared_ptr lock()
+        constexpr uintptr_t wrapped_target               = 0x10;               // ★ target pointer
+        constexpr uintptr_t control_block                = 0x18;               // ★ shared_ptr control
         // Inheritance: public RBX::Lua::WeakObjectRef, rbx::quick_intrusive_ptr_target<WeakThreadRef>
     };
 
