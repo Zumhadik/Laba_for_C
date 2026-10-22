@@ -121,7 +121,14 @@ namespace global_State {
 // ---------------------------------------------------------------------------
 // ⭐ Как получить главный lua_State* для executor'а (external, без call)
 // ---------------------------------------------------------------------------
-//   1. void*    ctx       = /* ScriptContext*, найти через TaskScheduler / xrefs */;
+//   1. void*    ctx       = /* ScriptContext*, см. ниже алгоритм поиска */;
+//
+//   Как найти ScriptContext внешним сканером:
+//     - module_base = GetModuleBase("RobloxPlayerBeta.exe")
+//     - vtable_remote = module_base + 0x70D1370  (ScriptContext primary vtable)
+//     - Пройти committed MEM_PRIVATE регионы, искать qword == vtable_remote
+//     - Первый найденный адрес p = &instance->vtable → instance = p
+//     - Проверка: читаем instance[+0x1548] (state), должен быть < 3
 //   2. uint64_t holder    = (uint64_t)ctx + ScriptContext::gs_holder_default;   // +0x40
 //   3. uint64_t enc_addr  = holder + GSHolder::encrypted_ptr;                   // +0x18
 //   4. uint32_t enc_lo    = read_u32(enc_addr + 0);

@@ -83,7 +83,18 @@ namespace Offsets
 
     namespace ScriptContext {
         const uintptr_t Resume                           = REBASE(0x43004B0);  // ✓ VALID (главный executor entry)
-        const uintptr_t GetGSHolder                      = REBASE(0x42DD7C0);  // ★ NEW holder getter (вызывается из GetGlobalState)
+        const uintptr_t GetGSHolder                      = REBASE(0x42DD7C0);  // ★ NEW holder getter
+        const uintptr_t GetThreadsCount                  = REBASE(0x425F800);  // ★ NEW const member — метрика "threads"
+        const uintptr_t RegisterStats                    = REBASE(0x43CA2F0);  // ★ NEW регистратор метрик (disabled/threads/AverageGcTime)
+
+        // RTTI данные
+        const uintptr_t RTTI_TypeDescriptor              = REBASE(0x84F3090);  // ★ NEW ".?AVScriptContext@RBX@@" type descriptor
+        const uintptr_t RTTI_COL_Primary                 = REBASE(0x786B1A8);  // ★ NEW primary COL (offset=0)
+        const uintptr_t RTTI_COL_Secondary               = REBASE(0x786AFE0);  // ★ NEW secondary COL (offset=152)
+
+        // ⭐ VTABLE — ключ для поиска instance'а в heap через scan
+        const uintptr_t VTable_Primary                   = REBASE(0x70D1370);  // ★ NEW
+        const uintptr_t VTable_Secondary                 = REBASE(0x70D15D8);  // ★ NEW
     };
 
     namespace RbxTransport {
