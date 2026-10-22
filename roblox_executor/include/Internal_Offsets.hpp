@@ -97,6 +97,16 @@ namespace Offsets
         const uintptr_t VTable_Secondary                 = REBASE(0x70D15D8);  // ★ NEW
     };
 
+    // ★ NEW: RBX::Lua::WeakThreadRef — wrapper объект для lua_State
+    // Scan heap на qword == этот vtable → все thread wrapper'ы в процессе.
+    // Через WeakThreadRef->lock() или dereference получается live lua_State*.
+    namespace WeakThreadRef {
+        const uintptr_t RTTI_TypeDescriptor              = REBASE(0x8271520);  // ".?AVWeakThreadRef@Lua@RBX@@"
+        const uintptr_t RTTI_COL_Primary                 = REBASE(0x7591218);  // offset=0, primary
+        const uintptr_t VTable                           = REBASE(0x6E8B508);  // ⭐ scan ключ
+        // Inheritance: public RBX::Lua::WeakObjectRef, rbx::quick_intrusive_ptr_target<WeakThreadRef>
+    };
+
     namespace RbxTransport {
         const uintptr_t ClientRtti                       = REBASE(0x7811B28);  // ✓ DATA
         const uintptr_t AppRtti                          = REBASE(0x7775F50);  // ✓ DATA
