@@ -233,13 +233,15 @@ namespace Offsets
         const uintptr_t ValueSetUnavailable              = REBASE(0x7F7160);   // ✓ VALID
     };
 
-    // ★ NEW: opcode dispatch tables (из Luau_Execute_Interpreter dispatch loop)
+    // ★ NEW: opcode dispatch tables (из Luau_Execute_Interpreter)
     namespace Opcodes {
-        const uintptr_t RemapTable       = REBASE(0x26D6DE4);  // uint8_t[256] encoded_opcode→canonical_index
-        // JumpTable реальный адрес резолви через IDA label jpt_26CA3B4
-        // (находится в .rdata; adjacent к Luau_Execute_Interpreter)
-        constexpr size_t CanonicalCount  = 94;                  // индексов 0..93 используется, 94 = invalid
-        constexpr size_t EncodedUsedCount = 94;                 // 94 distinct encoded bytes
+        const uintptr_t RemapTable       = REBASE(0x26D6DE4);  // uint8_t[256] (bytecode-2) → canonical
+        const uintptr_t JumpTable        = REBASE(0x26D6C68);  // uint32_t[95] canonical → handler_RVA
+        constexpr size_t CanonicalCount  = 94;                  // 0..93 валидны, 94 = default
+        // Dispatch logic:
+        //   bytecode_byte -> (byte - 2) -> remap -> canonical -> jump -> handler
+        //   real_opcode_byte = encoded_byte + 2
+        constexpr int    ByteShift       = 2;
     };
 }
 
