@@ -164,10 +164,39 @@ int Luau_Load(lua_State* L, RobloxLoadInfo* info);
 - CallInfo+0x08 — chain pointer (не pad, как думали)
 - CallInfo flags bit 4 = "JIT entry"
 
-## Следующий конкретный шаг
+## Итерация 3 (22 октября, вечер)
 
-1. Резолвить реальный адрес `jpt_26CA3B4` в IDA → получить RVA handler'ов
-2. Pattern-match handler'ов к luau upstream `OP_*` → полный opcode decode
-3. Mapping Proto pointer fields (0x08, 0x10, 0x20, ...) → k/code/p/... через Luau_Load
-4. Encryption scheme для Proto::codeentry — найти XOR routine
-5. Scaffold C++ dumper с r/w driver и генерацией структур в runtime
+### ScriptContext holder scheme разобран (из sub_42DD7C0)
+- `ScriptContext + 0x40` — default holder (688 bytes), identity=normal
+- `ScriptContext + 0x2F0` — elevated holder (688 bytes), identity=elevated
+- Choice bit: `(GetCapabilities(thread) >> 3) & 1`
+- Для MVP dumper'а — всегда используем default holder на `+0x40`
+- Non-default thread-specific holder'ы живут в hash-table на `+0x5A0`/`+0x600` (FNV-1a, 96-byte buckets) — для MVP не нужны
+- Это значит: **external dumper может прочитать global_State БЕЗ вызова любой функции**
+  (просто читаем holder, decrypt, идём по chain)
+
+### Luau opcode jump table resolved
+- Real address: `0x26D6C68` (`.rdata`, рядом с remap table `0x26D6DE4`)
+- 94 валидных handler'а полностью собраны (opcode_full_v117ad38284844374.txt)
+- Dispatch shift: `-2` перед remap → bytecode_byte = encoded + 2
+
+## Следующий шаг — начать писать C++ dumper
+
+У нас достаточно offset'ов для внешнего dumper'а:
+1. Attach к процессу RobloxPlayerBeta.exe (через r/w driver)
+2. Разрешить ModuleBase
+3. Прочитать TaskScheduler (static pointer в .data) → ScriptContext
+4. Прочитать holder на ScriptContext+0x40 → encrypted global_State
+5. Расшифровать: `gs = enc ^ (keys)`
+6. Прочитать mainthread на global_State+0x1A0 → lua_State*
+7. Прочитать поля lua_State (top, base, ci, status) → валидация
+
+Это 200-300 строк C++. Делает нулевую модификацию процесса — только read.
+
+### Что ещё остаётся для полного executor'а (не для MVP dumper'а)
+- Luau_Load calling convention + injection path
+- Opcode name mapping (handler RVA → OP_* name)
+- Proto pointer fields точный маппинг
+- Instance vftable decrypt routine
+- Full capability thresholds table (для identity management)
+- Thread hijack или shellcode для вызова internal функций

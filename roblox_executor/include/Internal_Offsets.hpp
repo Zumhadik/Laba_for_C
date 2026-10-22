@@ -83,6 +83,7 @@ namespace Offsets
 
     namespace ScriptContext {
         const uintptr_t Resume                           = REBASE(0x43004B0);  // ✓ VALID (главный executor entry)
+        const uintptr_t GetGSHolder                      = REBASE(0x42DD7C0);  // ★ NEW holder getter (вызывается из GetGlobalState)
     };
 
     namespace RbxTransport {

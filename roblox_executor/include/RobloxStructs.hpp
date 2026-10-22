@@ -119,25 +119,52 @@ namespace global_State {
 };
 
 // ---------------------------------------------------------------------------
-// ⭐ Как получить главный lua_State* для executor'а
+// ⭐ Как получить главный lua_State* для executor'а (external, без call)
 // ---------------------------------------------------------------------------
-//   1. void* ctx = /* найти ScriptContext через TaskScheduler или DataModel */;
-//   2. void* gs  = GetGlobalState(ctx);   // offset 0x425F7A0, расшифровывает encrypted ptr
-//   3. lua_State* mainL = *(lua_State**)((uint8_t*)gs + global_State::mainthread);
+//   1. void*    ctx    = /* найти ScriptContext через TaskScheduler / DataModel */;
+//   2. uint8_t* holder = (uint8_t*)ctx + ScriptContext::gs_holder_default;  // +0x40
+//   3. uint64_t enc    = *(uint64_t*)(holder + GSHolder::encrypted_ptr);    // +0x18
+//   4. uint32_t klo    = *(uint32_t*)(holder + GSHolder::key_low);          // +0x00
+//   5. uint32_t khi    = *(uint32_t*)(holder + GSHolder::key_high);         // +0x04
+//   6. uint64_t gs_raw = enc ^ (((uint64_t)khi << 32) | klo);
+//   7. global_State* gs = (global_State*)gs_raw;
+//   8. lua_State* mainL = *(lua_State**)((uint8_t*)gs + global_State::mainthread);  // +0x1A0
 //
-// Дальше mainL — твоя точка входа во всё остальное:
-//   - L[0x70] = top (куда push'ить TValue)
-//   - L[0x50] = ci (текущий CallInfo)
-//   - L[0x78] = gs (back-ref на global_State)
-//   - L[0x05] = isJit (выставить 0 для гарантированного interpreter)
+// Дальше mainL — точка входа во всё:
+//   L[0x70] = top         (куда push'ить TValue)
+//   L[0x50] = ci          (текущий CallInfo)
+//   L[0x78] = gs          (back-ref)
+//   L[0x05] = isJit flag  (выставить 0 для interpreter)
+//   L[0x03] = status      (0 = ok)
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
-// ScriptContext offsets (из GetGlobalState)
+// ScriptContext offsets (из GetGlobalState + ScriptContext_GetGSHolder)
 // ---------------------------------------------------------------------------
 namespace ScriptContext {
-    constexpr uintptr_t state_field       = 0x1548;  // [c] int32 — состояние (cmp 3 → crash)
-    constexpr uintptr_t gs_holder_offset  = 0x1A8;   // [c] offset до holder'а global_State
+    constexpr uintptr_t state_field          = 0x1548;  // [c] int32 — состояние (cmp 3 → crash)
+    constexpr uintptr_t gs_holder_arg_offset = 0x1A8;   // [c] передаётся как arg в getter
+
+    // Из sub_42DD7C0 (ScriptContext_GetGSHolder):
+    // Два встроенных holder'а по 688 байт идут подряд:
+    //   ScriptContext + 0x40 (= 64)   — default holder (для обычного identity)
+    //   ScriptContext + 0x2F0 (= 752) — elevated holder (identity_bit=1)
+    //
+    // Выбор зависит от: (GetCapabilities(thread) >> 3) & 1
+    // Для dumper'а без идентификации — всегда ReadDefault holder на +0x40.
+    constexpr uintptr_t gs_holder_default    = 0x040;   // [c] default identity holder (688 bytes)
+    constexpr uintptr_t gs_holder_elevated   = 0x2F0;   // [c] elevated identity holder (688 bytes)
+    constexpr size_t    gs_holder_size       = 688;     // [c] sizeof каждого holder'а
+
+    // Hash-table для non-default thread-specific holder'ов (FNV-1a):
+    //   ScriptContext + 0x5A0 (= 1440) — hash buckets для identity=0
+    //   ScriptContext + 0x600 (= 1536) — hash buckets для identity=1
+    // Bucket struct = 96 bytes. Для MVP dumper'а не нужны.
+    constexpr uintptr_t hash_table_normal    = 0x5A0;
+    constexpr uintptr_t hash_table_elevated  = 0x600;
+    constexpr size_t    hash_bucket_size     = 96;
+    constexpr uint64_t  FNV_PRIME            = 0x100000001B3;
+    constexpr uint64_t  FNV_BASIS            = 0xCBF29CE484222325;
 };
 
 // ---------------------------------------------------------------------------
