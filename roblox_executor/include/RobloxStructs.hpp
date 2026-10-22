@@ -129,7 +129,9 @@ namespace global_State {
 //     - Пройти committed MEM_PRIVATE регионы, искать qword == vtable_remote
 //     - Первый найденный адрес p = &instance->vtable → instance = p
 //     - Проверка: читаем instance[+0x1548] (state), должен быть < 3
-//   2. uint64_t holder    = (uint64_t)ctx + ScriptContext::gs_holder_default;   // +0x40
+//     - Может быть МНОЖЕСТВО candidates (клиент + edit mode). Правильный =
+//       тот у которого encrypted ptr в holder не нулевой.
+//   2. uint64_t holder    = (uint64_t)ctx + ScriptContext::gs_holder_default;   // +0x1E8
 //   3. uint64_t enc_addr  = holder + GSHolder::encrypted_ptr;                   // +0x18
 //   4. uint32_t enc_lo    = read_u32(enc_addr + 0);
 //   5. uint32_t enc_hi    = read_u32(enc_addr + 4);
@@ -152,23 +154,29 @@ namespace ScriptContext {
     constexpr uintptr_t state_field          = 0x1548;  // [c] int32 — состояние (cmp 3 → crash)
     constexpr uintptr_t gs_holder_arg_offset = 0x1A8;   // [c] передаётся как arg в getter
 
-    // Из sub_42DD7C0 (ScriptContext_GetGSHolder):
-    // Два встроенных holder'а по 688 байт идут подряд:
-    //   ScriptContext + 0x40 (= 64)   — default holder (для обычного identity)
-    //   ScriptContext + 0x2F0 (= 752) — elevated holder (identity_bit=1)
+    // ВНИМАНИЕ — ранее эти offsets были НЕПРАВИЛЬНЫМИ (0x40 / 0x2F0).
+    // Исправлено после runtime-тестирования: holder getter вызывается с
+    // (scriptCtx + 0x1A8) как первым аргументом, НЕ scriptCtx напрямую.
+    // Поэтому все внутренние offset'ы holder getter'а сдвинуты на +0x1A8.
     //
-    // Выбор зависит от: (GetCapabilities(thread) >> 3) & 1
-    // Для dumper'а без идентификации — всегда ReadDefault holder на +0x40.
-    constexpr uintptr_t gs_holder_default    = 0x040;   // [c] default identity holder (688 bytes)
-    constexpr uintptr_t gs_holder_elevated   = 0x2F0;   // [c] elevated identity holder (688 bytes)
+    // Из disasm GetGlobalState:
+    //   add rcx, 1A8h              ; rcx = scriptCtx + 0x1A8
+    //   call ScriptContext_GetGSHolder
+    //
+    // Из sub_42DD7C0: return a1 + 688 * bit + 64
+    // где a1 = scriptCtx + 0x1A8. Итого:
+    //   default:  scriptCtx + 0x1A8 + 64  = scriptCtx + 0x1E8
+    //   elevated: scriptCtx + 0x1A8 + 752 = scriptCtx + 0x498
+    constexpr uintptr_t gs_holder_default    = 0x1E8;   // [c] default identity holder (688 bytes)
+    constexpr uintptr_t gs_holder_elevated   = 0x498;   // [c] elevated identity holder (688 bytes)
     constexpr size_t    gs_holder_size       = 688;     // [c] sizeof каждого holder'а
 
     // Hash-table для non-default thread-specific holder'ов (FNV-1a):
-    //   ScriptContext + 0x5A0 (= 1440) — hash buckets для identity=0
-    //   ScriptContext + 0x600 (= 1536) — hash buckets для identity=1
+    //   scriptCtx + 0x1A8 + 0x5A0 = scriptCtx + 0x748 (normal)
+    //   scriptCtx + 0x1A8 + 0x600 = scriptCtx + 0x7A8 (elevated)
     // Bucket struct = 96 bytes. Для MVP dumper'а не нужны.
-    constexpr uintptr_t hash_table_normal    = 0x5A0;
-    constexpr uintptr_t hash_table_elevated  = 0x600;
+    constexpr uintptr_t hash_table_normal    = 0x748;
+    constexpr uintptr_t hash_table_elevated  = 0x7A8;
     constexpr size_t    hash_bucket_size     = 96;
     constexpr uint64_t  FNV_PRIME            = 0x100000001B3;
     constexpr uint64_t  FNV_BASIS            = 0xCBF29CE484222325;
