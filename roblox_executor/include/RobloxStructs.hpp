@@ -121,14 +121,14 @@ namespace global_State {
 // ---------------------------------------------------------------------------
 // ⭐ Как получить главный lua_State* для executor'а (external, без call)
 // ---------------------------------------------------------------------------
-//   1. void*    ctx    = /* найти ScriptContext через TaskScheduler / DataModel */;
-//   2. uint8_t* holder = (uint8_t*)ctx + ScriptContext::gs_holder_default;  // +0x40
-//   3. uint64_t enc    = *(uint64_t*)(holder + GSHolder::encrypted_ptr);    // +0x18
-//   4. uint32_t klo    = *(uint32_t*)(holder + GSHolder::key_low);          // +0x00
-//   5. uint32_t khi    = *(uint32_t*)(holder + GSHolder::key_high);         // +0x04
-//   6. uint64_t gs_raw = enc ^ (((uint64_t)khi << 32) | klo);
-//   7. global_State* gs = (global_State*)gs_raw;
-//   8. lua_State* mainL = *(lua_State**)((uint8_t*)gs + global_State::mainthread);  // +0x1A0
+//   1. void*    ctx       = /* ScriptContext*, найти через TaskScheduler / xrefs */;
+//   2. uint64_t holder    = (uint64_t)ctx + ScriptContext::gs_holder_default;   // +0x40
+//   3. uint64_t enc_addr  = holder + GSHolder::encrypted_ptr;                   // +0x18
+//   4. uint32_t enc_lo    = read_u32(enc_addr + 0);
+//   5. uint32_t enc_hi    = read_u32(enc_addr + 4);
+//   6. uint32_t key       = (uint32_t)enc_addr;              // low32 of REMOTE address
+//   7. uint64_t gs        = ((uint64_t)(enc_hi ^ key) << 32) | (enc_lo ^ key);
+//   8. lua_State* mainL   = read_u64(gs + global_State::mainthread);           // +0x1A0
 //
 // Дальше mainL — точка входа во всё:
 //   L[0x70] = top         (куда push'ить TValue)
@@ -168,18 +168,22 @@ namespace ScriptContext {
 };
 
 // ---------------------------------------------------------------------------
-// global_State pointer encryption (из GetGlobalState)
+// global_State pointer encryption (из disasm GetGlobalState)
 // ---------------------------------------------------------------------------
-// Как получить global_State* из ScriptContext:
-//   holder     = call sub_42DD7C0(scriptContext + 0x1A8)
-//   gs_encrypted = *(uint64_t*)(holder + 0x18)
-//   key_low    = *(uint32_t*)(holder + 0x00)
-//   key_high   = *(uint32_t*)(holder + 0x04)
-//   gs_real    = gs_encrypted XOR ((key_high << 32) | key_low)
+// КЛЮЧ decryption — low 32 bits АДРЕСА поля (holder+0x18) в remote AS.
+// Нет стороннего "key field". Это элегантный anti-tamper: ключ = position-dependent.
+//
+// Алгоритм:
+//   enc_addr = holder + 0x18                        // адрес encrypted qword в remote AS
+//   key      = (uint32_t)enc_addr                   // low 32 bits этого адреса
+//   enc_lo   = *(uint32_t*)(enc_addr + 0)
+//   enc_hi   = *(uint32_t*)(enc_addr + 4)
+//   gs_lo    = key ^ enc_lo
+//   gs_hi    = key ^ enc_hi
+//   global_State* = (uint64_t)gs_hi << 32 | gs_lo
 namespace GSHolder {
-    constexpr uintptr_t key_low        = 0x00;   // [c] uint32 XOR key low
-    constexpr uintptr_t key_high       = 0x04;   // [c] uint32 XOR key high
-    constexpr uintptr_t encrypted_ptr  = 0x18;   // [c] uint64 encrypted global_State*
+    constexpr uintptr_t encrypted_ptr  = 0x18;   // [c] 8 bytes XOR-encrypted global_State*
+    // key = low32 of (holder + encrypted_ptr) address itself — нет stored key
 };
 
 // ---------------------------------------------------------------------------
