@@ -100,7 +100,11 @@ namespace global_State {
     constexpr uintptr_t gray            = 0x030;   // [c] GCObject* — gray list head
     constexpr uintptr_t grayagain       = 0x038;   // [c] GCObject* — second gray list
     constexpr uintptr_t totalbytes      = 0x050;   // [c] size_t — всего выделено
-    constexpr uintptr_t mainthread      = 0x1A0;   // [c] lua_State* — ⭐ ГЛАВНЫЙ ТРЕД
+    constexpr uintptr_t mainthread      = 0x1A0;   // ⚠ [UNVERIFIED] runtime test показал что
+                                                   //   этот offset указывает на arena/pool metadata,
+                                                   //   не lua_State. Mainthread реально где-то в
+                                                   //   диапазоне +0x100..+0x200 — определяется
+                                                   //   runtime поиском (qword где q+0x78 == gs).
     constexpr uintptr_t sweepgc_list1   = 0x310;   // [c] GCObject* — sweep state A
     constexpr uintptr_t sweepgc_list2   = 0x4B8;   // [c] GCObject* — sweep state B
     constexpr uintptr_t alloc_hook      = 0x6A8;   // [c] void(*)(...) — alloc callback
