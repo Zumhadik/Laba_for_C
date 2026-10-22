@@ -1,0 +1,108 @@
+Luau opcode remap table dump
+Version: version-117ad38284844374 (== version-9ac8595712b447a7)
+Source: remap_table at 0x26D6DE4, read via dump_opcodes.py
+Note: handler_rva column is CORRUPTED in this dump (jpt_ label resolution wrong).
+      remap column is CORRECT. 94 = invalid/unused handler slot.
+
+encoded_byte -> canonical_idx
+=====================================
+  0x00 ->   0
+  0x05 ->   1
+  0x06 ->   2
+  0x08 ->   3
+  0x0C ->   4
+  0x0F ->   5
+  0x11 ->   6
+  0x13 ->   7
+  0x14 ->   8
+  0x18 ->   9
+  0x19 ->  10
+  0x21 ->  11
+  0x22 ->  12
+  0x25 ->  13
+  0x26 ->  14
+  0x29 ->  15
+  0x2A ->  16
+  0x2B ->  17
+  0x2E ->  18
+  0x2F ->  19
+  0x32 ->  20
+  0x35 ->  21
+  0x3D ->  22
+  0x40 ->  23
+  0x41 ->  24
+  0x42 ->  25
+  0x43 ->  26
+  0x48 ->  27
+  0x49 ->  28
+  0x4C ->  29
+  0x4D ->  30
+  0x4E ->  31
+  0x50 ->  32
+  0x54 ->  33
+  0x55 ->  34
+  0x56 ->  35
+  0x57 ->  36
+  0x59 ->  37
+  0x5F ->  38
+  0x61 ->  39
+  0x62 ->  40
+  0x63 ->  41
+  0x64 ->  42
+  0x66 ->  43
+  0x67 ->  44
+  0x69 ->  45
+  0x6C ->  46
+  0x71 ->  47
+  0x77 ->  48
+  0x83 ->  49
+  0x8B ->  50
+  0x8D ->  51
+  0x8E ->  52
+  0x91 ->  53
+  0x92 ->  54
+  0x95 ->  55
+  0x98 ->  56
+  0x9B ->  57
+  0x9D ->  58
+  0x9E ->  59
+  0xA0 ->  60
+  0xA6 ->  61
+  0xAA ->  62
+  0xAC ->  63
+  0xAF ->  64
+  0xB1 ->  65
+  0xB4 ->  66
+  0xB5 ->  67
+  0xB6 ->  68
+  0xB8 ->  69
+  0xBA ->  70
+  0xBC ->  71
+  0xBE ->  72
+  0xBF ->  73
+  0xC6 ->  74
+  0xC7 ->  75
+  0xCD ->  76
+  0xD3 ->  77
+  0xD5 ->  78
+  0xD8 ->  79
+  0xDD ->  80
+  0xDE ->  81
+  0xDF ->  82
+  0xE0 ->  83
+  0xE5 ->  84
+  0xE6 ->  85
+  0xE7 ->  86
+  0xE9 ->  87
+  0xEA ->  88
+  0xEB ->  89
+  0xF5 ->  90
+  0xF6 ->  91
+  0xF8 ->  92
+  0xFD ->  93
+
+Total: 94 distinct encoded opcodes (indices 0-93)
+Index 94 reserved as default/invalid handler slot
+
+All other bytes (0x01-0x04, 0x07, 0x09-0x0B, etc.) map to canonical 94
+and are treated as invalid opcodes.
